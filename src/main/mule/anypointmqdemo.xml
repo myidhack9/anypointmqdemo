@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+  <anypoint-mq:config name="Anypoint_MQ_Config" doc:name="Anypoint MQ Config" doc:id="59632215-a313-466b-9aaf-83cfa93b469c" >
+    <anypoint-mq:connection url="https://mq-us-east-1.anypoint.mulesoft.com/api/v1/organizations/0b150408-6e58-4a15-9115-daeffa95e6e4/environments/5a8ac0f9-2acb-4672-bb99-9fb4a4256d8e" clientId="6df31ada531443dd8ee315aba9465afa" clientSecret="f4ffDCaE1a2047f892975BC7Fe9Cb785" />
+  </anypoint-mq:config>
+  <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="814a62e4-ad1f-4aaf-b662-c2b6d011f048" >
+    <http:listener-connection host="0.0.0.0" port="8081" />
+  </http:listener-config>
+  <flow name="anypointmqdemoFlow" doc:id="56b62dcc-8bb4-40c4-a7d4-4c151459cd90" >
+    <http:listener doc:name="Listener" doc:id="f81d594f-26bb-4a2c-929e-630a736b4bc6" config-ref="HTTP_Listener_config" path="/mq"/>
+    <ee:transform doc:name="Transform Message" doc:id="a68a7a79-5fbe-480f-9fb2-deee98880993" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <anypoint-mq:publish doc:name="Publish" doc:id="965f9668-5efe-4a3f-ae62-38b4af79b6c1" config-ref="Anypoint_MQ_Config" destination="exchangequeue"/>
+    <ee:transform doc:name="Transform Message" doc:id="8cc5b761-c4dc-4647-bcc4-8956208b4355" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <logger level="INFO" doc:name="Logger" doc:id="bb108797-a8bc-489d-832d-7b57100d9a73" message="#[payload]"/>
+  </flow>
+  <flow name="anypointmqdemoFlow2" doc:id="4f832a4f-e650-4619-b57e-8b37e4c18946" >
+    <http:listener doc:name="Listener" doc:id="6c822054-74e0-40c9-9516-df780ee2a5cf" config-ref="HTTP_Listener_config" path="/consume"/>
+    <anypoint-mq:consume doc:name="Consume" doc:id="e4ecc4b0-2778-400b-809b-b1f0da9adc3a" config-ref="Anypoint_MQ_Config" destination="fifoqueue"/>
+    <ee:transform doc:name="Transform Message" doc:id="4ed3000b-1c70-41ce-9934-baf199bdc8bc" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <logger level="INFO" doc:name="Logger" doc:id="8d9f9e7b-fce4-4d16-807d-66f9ed1a4904" message="#[payload]"/>
+  </flow>
+  <flow name="anypointmqdemoFlow1" doc:id="50b60330-939d-4089-ba93-d81ddc630307" initialState="stopped">
+    <anypoint-mq:subscriber doc:name="Subscriber" doc:id="b782bd53-16f2-4100-b734-ea95ac7a4034" config-ref="Anypoint_MQ_Config" destination="normalqueue"/>
+    <ee:transform doc:name="Transform Message" doc:id="ce5b71a1-22de-4825-b4b8-7a506c64678b" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <logger level="INFO" doc:name="Logger" doc:id="7e77756f-5e76-4472-b2a9-da468d64ec4f" message="#[payload]"/>
+  </flow>
+</mule>
