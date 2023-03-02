@@ -35,7 +35,7 @@ payload]]></ee:set-payload>
   </flow>
   <flow name="anypointmqdemoFlow2" doc:id="4f832a4f-e650-4619-b57e-8b37e4c18946" >
     <http:listener doc:name="Listener" doc:id="6c822054-74e0-40c9-9516-df780ee2a5cf" config-ref="HTTP_Listener_config" path="/consume"/>
-    <anypoint-mq:consume doc:name="Consume" doc:id="e4ecc4b0-2778-400b-809b-b1f0da9adc3a" config-ref="Anypoint_MQ_Config" destination="fifoqueue"/>
+    <anypoint-mq:consume doc:name="Consume" doc:id="e4ecc4b0-2778-400b-809b-b1f0da9adc3a" config-ref="Anypoint_MQ_Config" destination="fifoqueue" acknowledgementMode="MANUAL"/>
     <ee:transform doc:name="Transform Message" doc:id="4ed3000b-1c70-41ce-9934-baf199bdc8bc" >
       <ee:message >
         <ee:set-payload ><![CDATA[%dw 2.0
@@ -44,6 +44,14 @@ output application/json
 payload]]></ee:set-payload>
       </ee:message>
     </ee:transform>
+    <choice doc:name="Choice" doc:id="43a73639-6fb5-4be6-a96e-30a980c79478" >
+      <when expression='#[payload.status=="success"]'>
+        <anypoint-mq:ack doc:name="Ack" doc:id="b97e8874-497e-468b-b35d-d7c34afcbd1f" config-ref="Anypoint_MQ_Config" ackToken="#[attributes.ackToken]"/>
+      </when>
+      <otherwise >
+        <anypoint-mq:nack doc:name="Nack" doc:id="9c07e25e-3449-4a34-a752-e448133e9e45" config-ref="Anypoint_MQ_Config" ackToken="#[attributes.ackToken]"/>
+      </otherwise>
+    </choice>
     <logger level="INFO" doc:name="Logger" doc:id="8d9f9e7b-fce4-4d16-807d-66f9ed1a4904" message="#[payload]"/>
   </flow>
   <flow name="anypointmqdemoFlow1" doc:id="50b60330-939d-4089-ba93-d81ddc630307" initialState="stopped">
